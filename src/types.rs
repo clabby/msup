@@ -1,9 +1,9 @@
 //! This module contains the definiteions for the upgrade JSON schema.
 
-use std::collections::HashMap;
 use alloy_json_abi::Function;
 use alloy_primitives::{Address, Bytes, U256};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Describes the definition of a multisig batch.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]

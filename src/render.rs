@@ -3,6 +3,7 @@
 use crate::types::{BatchTransaction, MultisigBatch};
 use anyhow::Result;
 use std::{fs::File, io::Write, path::PathBuf};
+use yansi::Paint;
 
 /// Renders a Markdown document from a [MultisigBatch] definition.
 pub fn render_batch_doc(input: &PathBuf, output: &PathBuf) -> Result<()> {
@@ -19,6 +20,8 @@ pub fn render_batch_doc(input: &PathBuf, output: &PathBuf) -> Result<()> {
 
     // Write the document to the output file
     File::create(output)?.write_all(document.as_bytes())?;
+
+    println!("Document rendered to {}", output.display().green());
 
     Ok(())
 }
@@ -43,29 +46,25 @@ fn append_header(writer: &mut String, batch: &MultisigBatch) {
 /// Appends a [BatchTransaction] at index `i` to the writer.
 fn append_transaction(writer: &mut String, i: usize, tx: &BatchTransaction) {
     // Newline
-    writer.push_str("\n");
+    writer.push('\n');
 
     // Transaction Header
     writer.push_str(format!("## Tx #{}: {}\n", i, tx.metadata.name).as_ref());
     writer.push_str(format!("{}\n", tx.metadata.description).as_ref());
 
     // Newline
-    writer.push_str("\n");
+    writer.push('\n');
 
     // Transaction Details
     writer.push_str(
-        format!(
-            "**Function Signature:** `{}`\n\n",
-            tx.contract_method.signature()
-        )
-        .as_ref(),
+        format!("**Function Signature:** `{}`\n\n", tx.contract_method.signature()).as_ref(),
     );
     writer.push_str(format!("**To:** `{}`\n\n", tx.to).as_ref());
     writer.push_str(format!("**Value:** `{} WEI`\n\n", tx.value).as_ref());
     writer.push_str(format!("**Raw Input Data:** `{}`\n", tx.data).as_ref());
 
     // Newline
-    writer.push_str("\n");
+    writer.push('\n');
 
     // Transaction Inputs
     writer.push_str("### Inputs\n");
