@@ -1,0 +1,28 @@
+[package]
+name = "msup"
+description = "A declarative upgrade generator for the OP Stack's `superchain-ops` repository"
+authors = ["clabby"]
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# External
+clap = { version = "4.1.13", features = ["derive"] }
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
+anyhow = "1.0.70"
+
+alloy-primitives = { version = "0.7.1", features = ["serde"] }
+alloy-json-abi = "0.7.1"
+alloy-dyn-abi = "0.7.1"
+
+serde = { version = "1.0.199", features = ["derive"] }
+serde_json = "1.0.116"
+latex = "0.3.1"
+
+inquire = "0.7.5"
+yansi = "1.0"
+
+[[bin]]
+name = "msup"
+path = "src/msup.rs"
