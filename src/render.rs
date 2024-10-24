@@ -1,7 +1,11 @@
 //! This file contains functions to generate a LaTeX document from a [MultisigBatch].
 
-use crate::types::{BatchTransaction, MultisigBatch};
-use anyhow::Result;
+use crate::{
+    types::{BatchTransaction, MultisigBatch},
+    util::encode_function_args,
+};
+use alloy_primitives::Bytes;
+use anyhow::{anyhow, Result};
 use std::{fs::File, io::Write, path::PathBuf};
 use yansi::Paint;
 
@@ -16,7 +20,7 @@ pub fn render_batch_doc(input: &PathBuf, output: &PathBuf) -> Result<()> {
         .transactions
         .iter()
         .enumerate()
-        .for_each(|(i, tx)| append_transaction(&mut document, i + 1, tx));
+        .try_for_each(|(i, tx)| append_transaction(&mut document, i + 1, tx))?;
 
     // Write the document to the output file
     File::create(output)?.write_all(document.as_bytes())?;
@@ -44,7 +48,31 @@ fn append_header(writer: &mut String, batch: &MultisigBatch) {
 }
 
 /// Appends a [BatchTransaction] at index `i` to the writer.
-fn append_transaction(writer: &mut String, i: usize, tx: &BatchTransaction) {
+fn append_transaction(writer: &mut String, i: usize, tx: &BatchTransaction) -> Result<()> {
+    // verify transaction details
+    let mut inputs = Vec::new();
+    tx.contract_method.inputs.iter().try_for_each(|input| {
+        if let Some(param) = tx.contract_inputs_values.get(&input.name) {
+            inputs.push(param);
+            Ok(())
+        } else {
+            Err(anyhow!(
+                "tx {}. input {} does not exist in the contractInputValues map",
+                i,
+                input.name
+            ))
+        }
+    })?;
+    let function = &tx.contract_method;
+    let data: Bytes = encode_function_args(function, inputs)?.into();
+    if tx.data != data {
+        return Err(anyhow!(
+            "tx {}. Tx data does not match contractInputsValues. Instead Got {} instead",
+            i,
+            data
+        ));
+    }
+
     // Newline
     writer.push('\n');
 
@@ -71,4 +99,5 @@ fn append_transaction(writer: &mut String, i: usize, tx: &BatchTransaction) {
     tx.contract_inputs_values.iter().for_each(|(name, value)| {
         writer.push_str(format!("**{}:** `{}`\n\n", name, value).as_ref());
     });
+    Ok(())
 }
